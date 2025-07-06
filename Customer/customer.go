@@ -33,14 +33,16 @@ type Customer struct {
 
 var (
 	customer_Id = 1
-	customers       []*Customer
+	customers   []*Customer
 )
 
 func newCustomer(firstName, lastName string, role Role) *Customer {
-	if firstName == "" || lastName == "" {
+	if firstName == "" {
 		return nil
 	}
-
+	if lastName == "" {
+		return nil
+	}
 	c := &Customer{
 		CustomerId:   customer_Id,
 		FirstName:    firstName,
@@ -69,4 +71,13 @@ func NewUser(creator *Customer, firstName, lastName string) *Customer {
 
 func (c *Customer) IsRoleAdmin() bool {
 	return c.Role == Admin
+}
+
+func GetCustomerById(id int) *Customer {
+	for _, cust := range customers {
+		if cust.CustomerId == id {
+			return cust
+		}
+	}
+	return nil
 }

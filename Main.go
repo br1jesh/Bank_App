@@ -4,28 +4,19 @@ import (
 	"Banking_App/Account"
 	"Banking_App/Bank"
 	"Banking_App/Customer"
-	"fmt"
 )
 
 func main() {
 	admin := Customer.NewAdmin("Brijesh", "Mavani")
-	user := Customer.NewUser(admin, "Jaydeep", "Patel")
+	hdfcBank := Bank.NewBank(admin, "HDFC Bank", "HDFC")
 
-	bank := Bank.NewBank(admin, "Yes Bank", "YB")
 
-	account1 := Account.NewAccount(user, bank)
-	account2 := Account.NewAccount(user, bank)
+	user1 := Customer.NewUser(admin, "Amit", "Shah")
+	user2 := Customer.NewUser(admin, "ajay", "shah")
 
-	fmt.Println(account1)
-	fmt.Println(account2)
-	printCustomerAccounts(user)
-}
+	Account.NewAccount(user1, hdfcBank.BankId)
+	Account.NewAccount(user2, hdfcBank.BankId)
 
-func printCustomerAccounts(user *Customer.Customer) {
-	for _, acc := range Account.Accounts {
-		if acc.CustomerId == user.CustomerId {
-			println("Account:", acc.AccountNo, "Balance:", acc.Balance)
-		}
-	}
-	println("Total balance for", user.FirstName, user.LastName, ":", user.TotalBalance)
+	hdfcBank.GetAllPassbook(admin)
+	hdfcBank.GetAllPassbook(user1)
 }

@@ -1,7 +1,6 @@
 package Account
 
 import (
-	"Banking_App/Bank"
 	"Banking_App/Customer"
 	"fmt"
 )
@@ -18,17 +17,22 @@ var (
 	Accounts   []*Account
 )
 
-func NewAccount(customer *Customer.Customer, bank *Bank.Bank) *Account {
+func NewAccount(c *Customer.Customer, bankId int) *Account {
 	a := &Account{
 		AccountNo:  account_Id,
-		BankId:     bank.BankId,
-		CustomerId: customer.CustomerId,
+		BankId:     bankId,
+		CustomerId: c.CustomerId,
 		Balance:    1000,
 	}
 	account_Id++
 	Accounts = append(Accounts, a)
-	customer.TotalBalance += 1000
 
-	fmt.Println("Account created:", a.AccountNo, "for Customer:", customer.FirstName, customer.LastName, "with initial balance 1000")
+	fmt.Println("Account created:", a.AccountNo, "for Customer:", c.FirstName, c.LastName, "with initial balance 1000")
 	return a
 }
+
+// func(a *Account) DepositeMoney (Money int){
+   
+// }
+
+
