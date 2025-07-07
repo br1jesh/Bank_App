@@ -8,46 +8,44 @@ import (
 )
 
 func main() {
-	bank1 := Bank.NewBank("State Bank India")
-	bank2 := Bank.NewBank("Housing Development Finance Corporation ")
+	fmt.Println("\n--- BANK CREATION ---")
+	b1 := Bank.NewBank("State Bank India")
+	b2 := Bank.NewBank(" Housing Development Finance Corporation")
+	
 
-	fmt.Println("Bank 1:", *bank1)
-	fmt.Println("Bank 2:", *bank2)
+	admin := Customer.NewAdmin("Ajay","shah")
+	user1 := Customer.NewUser(admin, "Brijesh", "Mavani")
+	user2 := Customer.NewUser(admin, "Jay", "Shah")
 
-	admin := Customer.NewAdmin("Jay", "shah")
 
-	user1 := Customer.NewUser(admin, "jain", "Smith")
-	user2 := Customer.NewUser(admin, "Brijesh", "Mavani")
+	acc1 := Account.NewAccount(user1.CustomerId, user1.FirstName, user1.LastName, b1.BankID)
+	acc2 := Account.NewAccount(user1.CustomerId, user1.FirstName, user1.LastName, b2.BankID)
+	acc3 := Account.NewAccount(user2.CustomerId, user2.FirstName, user2.LastName, b1.BankID)
 
-	acc1 := Account.NewAccount(user1.CustomerId, user1.FirstName, user1.LastName, bank1.BankID)
-	acc2 := Account.NewAccount(user1.CustomerId, user1.FirstName, user1.LastName, bank2.BankID)
-	acc3 := Account.NewAccount(user2.CustomerId, user2.FirstName, user2.LastName, bank1.BankID)
 
-	acc1.Deposit(2000)
-	acc1.Withdraw(500)
-	acc2.Deposit(1500)
-	acc3.Withdraw(100)
+	Account.DepositToAccount(acc1.AccountNo, 2000)
+	Account.DepositToAccount(acc3.AccountNo, 1500)
 
-	user1.ViewBalances()
+	if err := acc2.Withdraw(500); err != nil {
+		fmt.Println("Withdraw error:", err)
+	}
+	Account.TransferBetweenAccounts(user1.CustomerId, acc1.AccountNo, acc2.AccountNo, 1000)
+	acc1.PrintPassbook()
+	
+
+	fmt.Println("\n----------- ---")
 	user2.ViewBalances()
 
-	user1.TransferBetweenAccounts(acc1.AccountNo, acc2.AccountNo, 700)
+	fmt.Println("\n--- ------------------")
+	b1.PrintAllPassbooks()
 
-	acc1.PrintPassbook()
-	acc2.PrintPassbook()
-
-	fmt.Println("Printing all passbooks of bank1")
-	bank1.PrintAllPassbooks()
-	Customer.DeleteCustomer(admin, user1.CustomerId)
-
-	fmt.Println("Deleting user2 accounts first...")
-	for _, acc := range Account.GetAllAccounts() {
-		if acc.CustomerId == user2.CustomerId {
-			acc.Withdraw(acc.Balance)
-		}
+	accountsPage1 := Account.GetAccountsPaginated(1, 2)
+	fmt.Println("Accounts Page 1:")
+	for _, a := range accountsPage1 {
+		fmt.Println("  Account:", a.AccountNo, "Owner:", a.FullName, "Balance: Rs.", a.Balance)
 	}
-	Customer.DeleteCustomer(admin, user2.CustomerId)
 
-	Bank.DeleteBank(bank1.BankID)
+	fmt.Println("\n----------------- ---")
+	Customer.DeleteCustomer(admin, user1.CustomerId)
 
 }

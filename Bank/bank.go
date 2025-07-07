@@ -106,3 +106,26 @@ func (b *Bank) PrintAllPassbooks() {
 		fmt.Println("Account No:", acc.AccountNo, " Customer ID:", acc.CustomerId, " Balance:", acc.Balance)
 	}
 }
+
+func GetBanksPaginated(page, size int) []*Bank {
+	defer handleBankPanic("GetBanksPaginated")
+
+	var bankList []*Bank
+	for _, bank := range allBanks {
+		bankList = append(bankList, bank)
+	}
+
+	start := (page - 1) * size
+	end := start + size
+
+	if start >= len(bankList) {
+		return []*Bank{}
+	}
+
+	if end > len(bankList) {
+		end = len(bankList)
+	}
+
+	return bankList[start:end]
+}
+

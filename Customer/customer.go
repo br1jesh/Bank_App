@@ -151,49 +151,60 @@ func (c *Customer) ViewBalances() {
 	fmt.Println("Total Balanceall accounts: Rs", c.GetTotalBalance())
 }
 
-func (c *Customer) TransferBetweenAccounts(fromAccNo, toAccNo int, amount float32) {
-	defer handleCustomerPanic("TransferBetweenAccounts")
-
-	if amount <= 0 {
-		fmt.Println("Transfer amount must be positive")
+func (c *Customer) UpdateCustomer(param string, value interface{}) {
+	if !c.IsActive {
+		fmt.Println("Contact is inactive; update skipped.")
 		return
 	}
+	switch param {
+	case "FName":
+		c.updateCustomerFirstName(value)
+	case "LName":
+		c.updateCustomerLastName(value)
+	case "IsActive":
+		c.updateCustomerIsActive(value)
+	default:
+		fmt.Println("Unknown parameter:", param)
+	}
+}
 
-	var fromAcc, toAcc *Account.Account
-	for _, acc := range Account.GetAllAccounts() {
-		if acc.CustomerId == c.CustomerId {
-			if acc.AccountNo == fromAccNo {
-				fromAcc = acc
-			}
-			if acc.AccountNo == toAccNo {
-				toAcc = acc
-			}
-		}
+func (c *Customer) updateCustomerFirstName(value interface{}) {
+	if str, ok := value.(string); ok && str != "" {
+		c.FirstName = str
+		fmt.Println("First name updated successfully.")
+	} else {
+		fmt.Println("updateFirstName: invalid string")
+	}
+}
+
+func (c *Customer) updateCustomerLastName(value interface{}) {
+	if str, ok := value.(string); ok && str != "" {
+		c.LastName = str
+		fmt.Println("Last name updated successfully.")
+	} else {
+		fmt.Println("updateLastName: invalid string")
+	}
+}
+
+func (c *Customer) updateCustomerIsActive(value interface{}) {
+	if status, ok := value.(bool); ok {
+		c.IsActive = status
+		fmt.Println("IsActive status changed to:", status)
+	} else {
+		fmt.Println("updateIsActiveStatus: invalid bool")
+	}
+}
+
+func GetCustomerPaginated(page, size int) []*Customer {
+	start := (page - 1) * size
+	end := start + size
+
+	if start >= len(customers) {
+		return []*Customer{}
 	}
 
-	if fromAcc == nil {
-		fmt.Println("from account not found ")
-		return
+	if end > len(customers) {
+		end = len(customers)
 	}
-	if toAcc == nil {
-		fmt.Println("to account not found")
-		return
-	}
-	if fromAccNo == toAccNo {
-		fmt.Println("Cannot transfer to the same account.")
-		return
-	}
-
-	if fromAcc.Balance < amount {
-		fmt.Println("Insufficient balance in from account.")
-		return
-	}
-
-	fromAcc.Balance -= amount
-	fromAcc.AddTransaction("Transfer Out", amount, fmt.Sprintf("Transferred to Account %d", toAcc.AccountNo))
-
-	toAcc.Balance += amount
-	toAcc.AddTransaction("Transfer In", amount, fmt.Sprintf("Received from Account %d", fromAcc.AccountNo))
-
-	fmt.Println("Transferred Rs.", amount, " from Account", fromAcc.AccountNo, " to Account successfully", toAcc.AccountNo)
+	return customers[start:end]
 }
