@@ -2,58 +2,107 @@ package Bank
 
 import (
 	"Banking_App/Account"
-	"Banking_App/Customer"
+	"errors"
 	"fmt"
+	"strings"
 )
 
-type Bank struct {
-	BankId       int
-	FullName     string
-	Abbreviation string
+func handleBankPanic(context string) {
+	if r := recover(); r != nil {
+		fmt.Println("Recovered panic from", context, r)
+	}
 }
 
 var (
-	bank_Id = 1
-	banks   []*Bank
+	bankId   = 0
+	allBanks = make(map[int]*Bank)
 )
 
-func NewBank(c *Customer.Customer, fullName, abbreviation string) *Bank {
-	if !c.IsRoleAdmin() {
-		fmt.Println("Only Admin can create a new Bank.")
-		return nil
-	}
-	b := &Bank{
-		BankId:       bank_Id,
-		FullName:     fullName,
-		Abbreviation: abbreviation,
-	}
-	bank_Id++
-	banks = append(banks, b)
-
-	fmt.Println("Bank Created:", fullName, abbreviation, "ID:", b.BankId)
-	return b
+type Bank struct {
+	BankID       int
+	FullName     string
+	Abbreviation string
+	Accounts     []*Account.Account
 }
 
-func (b *Bank) GetAllPassbook(c *Customer.Customer) {
-	if !c.IsRoleAdmin() {
-		fmt.Println("Only Admin can view all user passbooks.")
-		return
+func NewBank(fullName string) *Bank {
+	if fullName == "" {
+		return nil
 	}
+	bankId++
+	bank := &Bank{
+		BankID:       bankId,
+		FullName:     fullName,
+		Abbreviation: getAbbreviation(fullName),
+	}
+	allBanks[bank.BankID] = bank
+	fmt.Println("Bank created:", bank.FullName, "(", bank.Abbreviation, ") with ID:", bank.BankID)
+	return bank
+}
 
-	fmt.Println("Bank Name:", b.FullName, "| Bank Id:", b.BankId)
-	found := false
-	for _, acc := range Account.Accounts {
-		if acc.BankId == b.BankId {
-			found = true
-			customer := Customer.GetCustomerById(acc.CustomerId)
-			custName := "Unknown"
-			if customer != nil {
-				custName = customer.FirstName + " " + customer.LastName
-			}
-			fmt.Println("AccountNo:", acc.AccountNo, "| CustomerID:", acc.CustomerId, "| Name:", custName, "| Balance:", acc.Balance)
+func getAbbreviation(input string) string {
+	words := strings.Fields(input)
+	var firstLetters []string
+	for _, word := range words {
+		if len(word) > 0 {
+			firstLetters = append(firstLetters, string(word[0]))
 		}
 	}
-	if !found {
-		fmt.Println("No accounts found for this User.")
+	return strings.Join(firstLetters, "")
+}
+
+func GetBankById(bankId int) (*Bank, error) {
+	defer handleBankPanic("GetBank")
+	bank, exists := allBanks[bankId]
+	if !exists {
+		return nil, errors.New("bank not found")
+	}
+	return bank, nil
+}
+
+func (b *Bank) UpdateBank(param string, value interface{}) error {
+	defer handleBankPanic("UpdateBank")
+	if param == "" {
+		return errors.New("parameter cannot be empty")
+	}
+	switch param {
+	case "FullName":
+		strVal, ok := value.(string)
+		if !ok || strVal == "" {
+			return errors.New("invalid fullname")
+		}
+		b.FullName = strVal
+		b.Abbreviation = getAbbreviation(strVal)
+		fmt.Println("Bank fullname updated :", b.FullName, b.Abbreviation)
+	default:
+		return errors.New("invalid parameter for update")
+	}
+	return nil
+}
+
+func DeleteBank(bankId int) error {
+	defer handleBankPanic("DeleteBank")
+
+	bank, exists := allBanks[bankId]
+	if !exists {
+		return errors.New("bank not found")
+	}
+	if len(bank.Accounts) > 0 {
+		return errors.New("cannot delete bank with active accounts")
+	}
+	delete(allBanks, bankId)
+	fmt.Println("Bank with ID", bankId, "deleted successfully")
+	return nil
+}
+
+func (b *Bank) PrintAllPassbooks() {
+	defer handleBankPanic("PrintAllPassbooks")
+	fmt.Println("Bank:", b.FullName, "| ID:", b.BankID)
+	if len(b.Accounts) == 0 {
+		fmt.Println("No accounts found for this bank.")
+		return
+	}
+	for _, acc := range b.Accounts {
+		fmt.Println("Account No:", acc.AccountNo, " Customer ID:", acc.CustomerId, " Balance:", acc.Balance)
 	}
 }
