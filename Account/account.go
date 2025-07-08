@@ -1,6 +1,7 @@
 package Account
 
 import (
+	ledger "Banking_App/Ledger"
 	transaction "Banking_App/Transaction"
 	"errors"
 	"fmt"
@@ -16,6 +17,7 @@ func handleAccountPanic(context string) {
 type Account struct {
 	AccountNo  int
 	BankId     int
+	BankName   string 
 	CustomerId int
 	Balance    float32
 	FullName   string
@@ -28,12 +30,13 @@ var (
 	Accounts      []*Account
 )
 
-func NewAccount(customerId int, firstName, lastName string, bankId int) *Account {
+func NewAccount(customerId int, firstName, lastName string, bankId int, bankName string) *Account {
 	defer handleAccountPanic("NewAccount")
 
 	a := &Account{
 		AccountNo:  account_Id,
 		BankId:     bankId,
+		BankName:   bankName, 
 		CustomerId: customerId,
 		Balance:    1000,
 		FullName:   firstName + " " + lastName,
@@ -42,7 +45,6 @@ func NewAccount(customerId int, firstName, lastName string, bankId int) *Account
 	Accounts = append(Accounts, a)
 
 	a.AddTransaction("Deposit", 1000, "Account opening")
-
 	fmt.Println("Account created:", a.AccountNo, "Name:", a.FullName, "Initial Balance: Rs.", a.Balance)
 	return a
 }
@@ -129,14 +131,16 @@ func TransferBetweenAccounts(customerId, fromAccNo, toAccNo int, amount float32)
 		}
 	}
 
-	if fromAcc == nil ||toAcc == nil  {
-		fmt.Println("From account not found.")
+	if fromAcc == nil || toAcc == nil {
+		fmt.Println("Account(s) not found for this customer.")
 		return
 	}
+
 	if fromAccNo == toAccNo {
 		fmt.Println("Cannot transfer to the same account.")
 		return
 	}
+
 	if fromAcc.Balance < amount {
 		fmt.Println("Insufficient balance in from account.")
 		return
@@ -148,9 +152,16 @@ func TransferBetweenAccounts(customerId, fromAccNo, toAccNo int, amount float32)
 	toAcc.Balance += amount
 	toAcc.AddTransaction("Transfer In", amount, fmt.Sprintf("Received from Account %d", fromAcc.AccountNo))
 
-	fmt.Println("Transferred Rs.", amount, "from Account", fromAcc.AccountNo, "to Account", toAcc.AccountNo)
-}
+	fmt.Printf("Transferred Rs. %.2f from Account %d to Account %d\n", amount, fromAcc.AccountNo, toAcc.AccountNo)
 
+	ledger.AddTransferEntry(
+		fromAcc.AccountNo,
+		fromAcc.BankName,
+		toAcc.AccountNo,
+		toAcc.BankName,
+		amount,
+	)
+}
 
 func GetAccountsPaginated(page, size int) []*Account {
 	start := (page - 1) * size
