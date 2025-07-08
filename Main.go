@@ -8,20 +8,17 @@ import (
 )
 
 func main() {
-	fmt.Println("\n--- BANK CREATION ---")
+
 	b1 := Bank.NewBank("State Bank India")
 	b2 := Bank.NewBank(" Housing Development Finance Corporation")
-	
 
-	admin := Customer.NewAdmin("Ajay","shah")
+	admin := Customer.NewAdmin("Ajay", "shah")
 	user1 := Customer.NewUser(admin, "Brijesh", "Mavani")
 	user2 := Customer.NewUser(admin, "Jay", "Shah")
-
 
 	acc1 := Account.NewAccount(user1.CustomerId, user1.FirstName, user1.LastName, b1.BankID)
 	acc2 := Account.NewAccount(user1.CustomerId, user1.FirstName, user1.LastName, b2.BankID)
 	acc3 := Account.NewAccount(user2.CustomerId, user2.FirstName, user2.LastName, b1.BankID)
-
 
 	Account.DepositToAccount(acc1.AccountNo, 2000)
 	Account.DepositToAccount(acc3.AccountNo, 1500)
@@ -31,19 +28,12 @@ func main() {
 	}
 	Account.TransferBetweenAccounts(user1.CustomerId, acc1.AccountNo, acc2.AccountNo, 1000)
 	acc1.PrintPassbook()
-	
 
-	fmt.Println("\n----------- ---")
+	fmt.Println("\n------------ ---")
 	user2.ViewBalances()
 
 	fmt.Println("\n--- ------------------")
 	b1.PrintAllPassbooks()
-
-	accountsPage1 := Account.GetAccountsPaginated(1, 2)
-	fmt.Println("Accounts Page 1:")
-	for _, a := range accountsPage1 {
-		fmt.Println("  Account:", a.AccountNo, "Owner:", a.FullName, "Balance: Rs.", a.Balance)
-	}
 
 	fmt.Println("\n----------------- ---")
 	Customer.DeleteCustomer(admin, user1.CustomerId)
