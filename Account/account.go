@@ -17,7 +17,7 @@ func handleAccountPanic(context string) {
 type Account struct {
 	AccountNo  int
 	BankId     int
-	BankName   string 
+	BankName   string
 	CustomerId int
 	Balance    float32
 	FullName   string
@@ -36,7 +36,7 @@ func NewAccount(customerId int, firstName, lastName string, bankId int, bankName
 	a := &Account{
 		AccountNo:  account_Id,
 		BankId:     bankId,
-		BankName:   bankName, 
+		BankName:   bankName,
 		CustomerId: customerId,
 		Balance:    1000,
 		FullName:   firstName + " " + lastName,
@@ -176,3 +176,4 @@ func GetAccountsPaginated(page, size int) []*Account {
 	}
 	return Accounts[start:end]
 }
+

@@ -23,6 +23,7 @@ type Bank struct {
 	FullName     string
 	Abbreviation string
 	Accounts     []*Account.Account
+	IsActive     bool
 }
 
 func NewBank(fullName string) *Bank {
@@ -34,6 +35,7 @@ func NewBank(fullName string) *Bank {
 		BankID:       bankId,
 		FullName:     fullName,
 		Abbreviation: getAbbreviation(fullName),
+		IsActive:     true,
 	}
 	allBanks[bank.BankID] = bank
 	fmt.Println("Bank created:", bank.FullName, "(", bank.Abbreviation, ") with ID:", bank.BankID)
@@ -90,13 +92,14 @@ func DeleteBank(bankId int) error {
 	if len(bank.Accounts) > 0 {
 		return errors.New("cannot delete bank with active accounts")
 	}
-	delete(allBanks, bankId)
-	fmt.Println("Bank with ID", bankId, "deleted successfully")
+
+	bank.IsActive = false
+	fmt.Println("Bank with ID", bankId, " deleted")
 	return nil
 }
 
 func (b *Bank) PrintAllPassbooks() {
-	defer handleBankPanic("PrintAllPassbooks")
+	defer handleBankPanic("PrintAllPassbook")
 	fmt.Println("Bank:", b.FullName, "| ID:", b.BankID)
 	if len(b.Accounts) == 0 {
 		fmt.Println("No accounts found for this bank.")
@@ -128,4 +131,3 @@ func GetBanksPaginated(page, size int) []*Bank {
 
 	return bankList[start:end]
 }
-

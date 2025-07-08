@@ -2,6 +2,7 @@ package Customer
 
 import (
 	"Banking_App/Account"
+	"Banking_App/Bank"
 	"fmt"
 )
 
@@ -65,6 +66,22 @@ func newCustomer(firstName, lastName string, role Role) *Customer {
 	return c
 }
 
+func (c *Customer) NewBank(fullName string) *Bank.Bank {
+	if !c.IsRoleAdmin() {
+		fmt.Println("Only Admin can create a new bank.")
+		return nil
+	}
+	return Bank.NewBank(fullName)
+}
+
+func (c *Customer) NewAccount(customerId int, firstName, lastName string, bankId int, bankName string) *Account.Account {
+	if !c.IsRoleUser() {
+		fmt.Println("Only Customer can create a new bankaccount.")
+		return nil
+	}
+	return Account.NewAccount(customerId, firstName, lastName, bankId, bankName)
+}
+
 func NewAdmin(firstName, lastName string) *Customer {
 	return newCustomer(firstName, lastName, Admin)
 }
@@ -79,6 +96,9 @@ func NewUser(creator *Customer, firstName, lastName string) *Customer {
 
 func (c *Customer) IsRoleAdmin() bool {
 	return c.Role == Admin
+}
+func (c *Customer) IsRoleUser() bool {
+	return c.Role == User
 }
 
 func GetCustomerById(id int) *Customer {
@@ -97,7 +117,7 @@ func GetAllCustomers() []*Customer {
 func DeleteCustomer(admin *Customer, customerId int) {
 	defer handleCustomerPanic("DeleteCustomer")
 	if !admin.IsRoleAdmin() {
-		fmt.Println("Only Admin delete customer.")
+		fmt.Println("Only Admin can delete customer.")
 		return
 	}
 	cust := GetCustomerById(customerId)
@@ -113,14 +133,8 @@ func DeleteCustomer(admin *Customer, customerId int) {
 		}
 	}
 
-	for i, u := range customers {
-		if u.CustomerId == customerId {
-			customers = append(customers[:i], customers[i+1:]...)
-			fmt.Println("Deleted customer:", cust.FirstName, cust.LastName)
-			return
-		}
-	}
-	fmt.Println("Customer deletion UnSuccesful.")
+	cust.IsActive = false
+	fmt.Println("Customer:", cust.FirstName, cust.LastName, "soft deleted (IsActive set to false).")
 }
 
 func (c *Customer) GetTotalBalance() float32 {
@@ -154,6 +168,10 @@ func (c *Customer) ViewBalances() {
 func (c *Customer) UpdateCustomer(param string, value interface{}) {
 	if !c.IsActive {
 		fmt.Println("Contact is inactive; update skipped.")
+		return
+	}
+	if !c.IsRoleAdmin() {
+		fmt.Println("Only admin can create a new bankaccount.")
 		return
 	}
 	switch param {
