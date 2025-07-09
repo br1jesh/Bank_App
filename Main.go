@@ -1,7 +1,6 @@
 package main
 
 import (
-	"Banking_App/Account"
 	"Banking_App/Customer"
 	"Banking_App/Ledger"
 	"fmt"
@@ -9,32 +8,32 @@ import (
 
 func main() {
 	admin := Customer.NewAdmin("Ajay", "Shah")
-	user1 := Customer.NewUser(admin, "Brijesh", "Mavani")
-	user2 := Customer.NewUser(admin, "Jay", "Shah")
+	user1 := admin.NewUser("Brijesh", "Mavani")
+	user2 := admin.NewUser("Jay", "Shah")
 
 	b1 := admin.NewBank("State Bank India")
 	b2 := admin.NewBank("Housing Development Finance Corporation")
 	b3 := admin.NewBank("Yes Bank")
+	admin.UpdateBank(b1.BankID, "Industrial Credit and Investment Corporation of India")
+	fmt.Println(b1)
 
-	
 	acc1 := user1.NewAccount(user1.CustomerId, user1.FirstName, user1.LastName, b1.BankID, "SBI")
+	acc5 := user1.NewAccount(user1.CustomerId, user1.FirstName, user1.LastName, b1.BankID, "SBI")
 	acc2 := user1.NewAccount(user1.CustomerId, user1.FirstName, user1.LastName, b2.BankID, "HDFC")
 	acc3 := user2.NewAccount(user2.CustomerId, user2.FirstName, user2.LastName, b1.BankID, "SBI")
 	acc4 := user2.NewAccount(user2.CustomerId, user2.FirstName, user2.LastName, b3.BankID, "YB")
 
-	Account.DepositToAccount(acc1.AccountNo, 2000)
-	Account.DepositToAccount(acc3.AccountNo, 1500)
-	Account.DepositToAccount(acc4.AccountNo, 100)
+	user1.DepositToAccount(acc1.AccountNo, 2000)
+	user1.DepositToAccount(acc2.AccountNo, 9900)
+	user2.DepositToAccount(acc3.AccountNo, 1500)
+	user2.DepositToAccount(acc4.AccountNo, 100)
+	user1.DepositToAccount(acc5.AccountNo, 9900)
+	user1.Withdraw(acc1.AccountNo, 500)
 
-	if err := acc2.Withdraw(500); err != nil {
-		fmt.Println("Withdraw error:", err)
-	}
+	user1.TransferBetweenAccounts(1001, 1002, 9)
+	user1.TransferBetweenAccounts(acc1.AccountNo, acc2.AccountNo, 100)
+	user2.TransferBetweenAccounts(acc3.AccountNo, acc4.AccountNo, 100)
 
-	Account.TransferBetweenAccounts(user1.CustomerId, acc1.AccountNo, acc2.AccountNo, 1000)
-	Account.TransferBetweenAccounts(user1.CustomerId, acc1.AccountNo, acc2.AccountNo, 100)
-	Account.TransferBetweenAccounts(user2.CustomerId, acc1.AccountNo, acc4.AccountNo, 100)
-
-	
 	acc1.PrintPassbook()
 
 	fmt.Println("\n------------  ---")
@@ -43,9 +42,14 @@ func main() {
 	fmt.Println("\n------------------------")
 	b1.PrintAllPassbooks()
 
-	fmt.Println("\n--- Deleting User1---")
+	fmt.Println("\n--- ---------")
 	Customer.DeleteCustomer(admin, user1.CustomerId)
 
-	fmt.Println("\n--- Ledger Balances ---")
+	fmt.Println("\n---------------------")
 	Ledger.PrintBankBalances()
+
+	user1.ViewMyAccounts()
+	user1.DeleteAccount(acc1.AccountNo)
+	user1.ViewMyAccounts()
+	user1.DepositToAccount(acc1.AccountNo, 2000)
 }

@@ -62,23 +62,17 @@ func GetBankById(bankId int) (*Bank, error) {
 	return bank, nil
 }
 
-func (b *Bank) UpdateBank(param string, value interface{}) error {
+func (b *Bank) UpdateBank(fullName string) error {
 	defer handleBankPanic("UpdateBank")
-	if param == "" {
-		return errors.New("parameter cannot be empty")
+
+	if fullName == "" {
+		return errors.New("fullname cannot be empty")
 	}
-	switch param {
-	case "FullName":
-		strVal, ok := value.(string)
-		if !ok || strVal == "" {
-			return errors.New("invalid fullname")
-		}
-		b.FullName = strVal
-		b.Abbreviation = getAbbreviation(strVal)
-		fmt.Println("Bank fullname updated :", b.FullName, b.Abbreviation)
-	default:
-		return errors.New("invalid parameter for update")
-	}
+
+	b.FullName = fullName
+	b.Abbreviation = getAbbreviation(fullName)
+	fmt.Println("Bank updated:", b.BankID, b.FullName, b.Abbreviation)
+
 	return nil
 }
 
