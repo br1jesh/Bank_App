@@ -46,14 +46,14 @@ var (
 
 func newCustomer(firstName, lastName string, role Role) *Customer {
 	defer handleCustomerPanic("newCustomer")
+
 	if firstName == "" {
-		fmt.Println("First name cannot be empty.")
-		return nil
+		panic("First name cannot be empty.")
 	}
 	if lastName == "" {
-		fmt.Println(" last name cannot be empty.")
-		return nil
+		panic("Last name cannot be empty.")
 	}
+
 	c := &Customer{
 		CustomerId: customerIdCounter,
 		FirstName:  firstName,
@@ -63,6 +63,7 @@ func newCustomer(firstName, lastName string, role Role) *Customer {
 	}
 	customerIdCounter++
 	customers = append(customers, c)
+
 	fmt.Println("Created:", role.String(), "-", firstName, lastName, "| ID:", c.CustomerId)
 	return c
 }
@@ -73,8 +74,7 @@ func NewAdmin(firstName, lastName string) *Customer {
 
 func (c *Customer) NewUser(firstName, lastName string) *Customer {
 	if !c.IsRoleAdmin() {
-		fmt.Println("Only Admin create new users.")
-		return nil
+		panic("Only Admin can create new users.")
 	}
 	return newCustomer(firstName, lastName, User)
 }
@@ -155,14 +155,15 @@ func (c *Customer) ViewBalances() {
 }
 
 func (c *Customer) UpdateCustomer(param string, value interface{}) {
+	defer handleCustomerPanic("UpdateCustomer")
+
 	if !c.IsActive {
-		fmt.Println("Contact is inactive; update skipped.")
-		return
+		panic("Customer is inactive; update skipped.")
 	}
 	if !c.IsRoleAdmin() {
-		fmt.Println("Only admin can create a new bankaccount.")
-		return
+		panic("Only Admin can update customer.")
 	}
+
 	switch param {
 	case "FName":
 		c.updateCustomerFirstName(value)
@@ -171,7 +172,7 @@ func (c *Customer) UpdateCustomer(param string, value interface{}) {
 	case "IsActive":
 		c.updateCustomerIsActive(value)
 	default:
-		fmt.Println("Unknown parameter:", param)
+		panic(fmt.Sprintf("Unknown parameter: %s", param))
 	}
 }
 
@@ -180,7 +181,7 @@ func (c *Customer) updateCustomerFirstName(value interface{}) {
 		c.FirstName = str
 		fmt.Println("First name updated successfully.")
 	} else {
-		fmt.Println("updateFirstName: invalid string")
+		panic("updateFirstName: invalid string value")
 	}
 }
 
@@ -189,7 +190,7 @@ func (c *Customer) updateCustomerLastName(value interface{}) {
 		c.LastName = str
 		fmt.Println("Last name updated successfully.")
 	} else {
-		fmt.Println("updateLastName: invalid string")
+		panic("updateLastName: invalid string value")
 	}
 }
 
@@ -198,26 +199,23 @@ func (c *Customer) updateCustomerIsActive(value interface{}) {
 		c.IsActive = status
 		fmt.Println("IsActive status changed to:", status)
 	} else {
-		fmt.Println("updateIsActiveStatus: invalid bool")
+		panic("updateIsActiveStatus: invalid bool value")
 	}
 }
 
 func DeleteCustomer(admin *Customer, customerId int) {
-	defer handleCustomerPanic("DeleteCustomer")
 	if !admin.IsRoleAdmin() {
-		fmt.Println("Only Admin can delete customer.")
-		return
+		panic("Only Admin can delete customer.")
 	}
+
 	cust := GetCustomerById(customerId)
 	if cust == nil {
-		fmt.Println("Customer not found")
-		return
+		panic("Customer not found.")
 	}
 
 	for _, acc := range Account.GetAllAccounts() {
 		if acc.CustomerId == customerId {
-			fmt.Println("Cannot delete. Customer has active accounts.")
-			return
+			panic("Cannot delete. Customer has active accounts.")
 		}
 	}
 
@@ -238,73 +236,65 @@ func GetCustomerPaginated(page, size int) []*Customer {
 	}
 	return customers[start:end]
 }
+
 // ---------------------------------Bank
 func (c *Customer) NewBank(fullName string) *Bank.Bank {
 	if !c.IsRoleAdmin() {
-		fmt.Println("Only Admin can create a new bank.")
-		return nil
+		panic("Only Admin can create a new bank.")
 	}
 	return Bank.NewBank(fullName)
 }
 
 func (c *Customer) ViewBankByID(bankId int) (*Bank.Bank, error) {
 	if !c.IsRoleAdmin() {
-		return nil, fmt.Errorf("only admin can view bank details")
+		panic("Only Admin can view bank details.")
 	}
 	return Bank.GetBankById(bankId)
 }
 
 func (c *Customer) ViewAllBanks(page, size int) ([]*Bank.Bank, error) {
 	if !c.IsRoleAdmin() {
-		return nil, fmt.Errorf("only admin can view all banks")
+		panic("Only Admin can view all banks.")
 	}
 	return Bank.GetBanksPaginated(page, size), nil
 }
 
 func (c *Customer) UpdateBank(bankId int, fullName string) error {
 	if !c.IsRoleAdmin() {
-		return fmt.Errorf("only admin can update a bank")
+		panic("Only Admin can update a bank.")
 	}
 
 	bank, err := Bank.GetBankById(bankId)
 	if err != nil {
 		return err
 	}
-
 	return bank.UpdateBank(fullName)
 }
 
 func (c *Customer) DeleteBank(bankId int) error {
 	if !c.IsRoleAdmin() {
-		return fmt.Errorf("only admin can delete a bank")
+		panic("Only Admin can delete a bank.")
 	}
 	return Bank.DeleteBank(bankId)
 }
 
-
-
-
 // -------------------------------------Account
 func (c *Customer) NewAccount(customerId int, firstName, lastName string, bankId int, bankName string) *Account.Account {
 	if !c.IsRoleUser() {
-		fmt.Println("Only Customer can create a new bankaccount.")
-		return nil
+		panic("Only Customer can create a new account.")
 	}
 	acc := Account.NewAccount(customerId, firstName, lastName, bankId, bankName)
-	c.Accounts = append(c.Accounts, acc) 
+	c.Accounts = append(c.Accounts, acc)
 	return acc
 }
 
-
 func (c *Customer) DepositToAccount(accountNo int, amount float32) *Account.Account {
 	if !c.IsRoleUser() {
-		fmt.Println("Only Customer can deposit.")
-		return nil
+		panic("Only Customer can deposit.")
 	}
 	acc := Account.GetAccountByNo(accountNo)
 	if acc == nil {
-		fmt.Println("Account not found.")
-		return nil
+		panic("Account not found.")
 	}
 	acc.Deposit(accountNo, amount)
 	return acc
@@ -312,25 +302,23 @@ func (c *Customer) DepositToAccount(accountNo int, amount float32) *Account.Acco
 
 func (c *Customer) Withdraw(accountNo int, amount float32) *Account.Account {
 	if !c.IsRoleUser() {
-		fmt.Println("Only Customer can deposit.")
-		return nil
+		panic("Only Customer can withdraw.")
 	}
 	acc := Account.GetAccountByNo(accountNo)
 	if acc == nil {
-		fmt.Println("Account not found.")
-		return nil
+		panic("Account not found.")
 	}
 	acc.Withdraw(accountNo, amount)
 	return acc
 }
 
-func (c *Customer) TransferBetweenAccounts(fromAccNo, toAccNo int, amount float32) {
-	defer handleCustomerPanic("TransferBetweenAccounts ")
+func (c *Customer) TransferBetweenAccountsSelf(fromAccNo, toAccNo int, amount float32) {
+	defer handleCustomerPanic("TransferBetweenAccountsSelf")
 
 	if !c.IsRoleUser() {
-		fmt.Println("Only Customer can transfer between their accounts.")
-		return
+		panic("Only Customer can transfer between their accounts.")
 	}
+
 	var fromAcc, toAcc *Account.Account
 	for _, acc := range c.Accounts {
 		if acc.AccountNo == fromAccNo {
@@ -342,16 +330,33 @@ func (c *Customer) TransferBetweenAccounts(fromAccNo, toAccNo int, amount float3
 	}
 
 	if fromAcc == nil || toAcc == nil {
-		fmt.Println("Account(s) not found for this customer.")
-		return
+		panic("Account(s) not found for this customer.")
 	}
-	fromAcc.TransferBetweenAccounts(toAcc, amount)
+
+	fromAcc.TransferBetweenAccountsSelf(toAcc, amount)
 }
 
 func (c *Customer) DeleteAccount(accountNo int) error {
 	if !c.IsRoleUser() {
-		fmt.Println("Only customers can delete their accounts.")
-		return fmt.Errorf("only customers can delete their accounts")
+		panic("Only Customer can delete their accounts.")
 	}
 	return Account.DeleteAccount(accountNo)
+}
+
+func (c *Customer) TransferBetweenAccounts(fromAccNo, toAccNo int, amount float32) {
+	defer handleCustomerPanic("TransferBetweenAccounts")
+
+	if !c.IsRoleUser() {
+		panic("Only Customer can transfer between accounts.")
+	}
+
+	fromAcc := Account.GetAccountByNo(fromAccNo)
+	if fromAcc == nil {
+		panic("From Account not found.")
+	}
+	if fromAcc.CustomerId != c.CustomerId {
+		panic("Unauthorized: You do not own the from-account.")
+	}
+
+	Account.TransferBetweenAccounts(fromAccNo, toAccNo, amount)
 }

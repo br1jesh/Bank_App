@@ -7,12 +7,6 @@ import (
 	"time"
 )
 
-func handleAccountPanic(context string) {
-	if r := recover(); r != nil {
-		fmt.Println("Recovered panic from", context, r)
-	}
-}
-
 type Account struct {
 	AccountNo  int
 	BankId     int
@@ -31,7 +25,6 @@ var (
 )
 
 func NewAccount(customerId int, firstName, lastName string, bankId int, bankName string) *Account {
-	defer handleAccountPanic("NewAccount")
 
 	a := &Account{
 		AccountNo:  account_Id,
@@ -64,7 +57,7 @@ func GetAccountByNo(accountNo int) *Account {
 }
 
 func (a *Account) Deposit(accountNo int, amount float32) *Account {
-	defer handleAccountPanic("Deposit")
+
 	acc := GetAccountByNo(accountNo)
 	if amount <= 0 {
 		fmt.Println("Deposit amount must be positive")
@@ -81,7 +74,7 @@ func (a *Account) Deposit(accountNo int, amount float32) *Account {
 }
 
 func (a *Account) Withdraw(accountNo int, amount float32) *Account {
-	defer handleAccountPanic("Withdraw")
+
 	if !a.IsActive {
 		fmt.Println("Withdrawal failed: Account", a.AccountNo, "is inactive.")
 		return nil
@@ -99,8 +92,7 @@ func (a *Account) Withdraw(accountNo int, amount float32) *Account {
 	return nil
 }
 
-func (a *Account) TransferBetweenAccounts(toAcc *Account, amount float32) {
-	defer handleAccountPanic("TransferBetweenAccounts")
+func (a *Account) TransferBetweenAccountsSelf(toAcc *Account, amount float32) {
 
 	if !a.IsActive {
 		fmt.Println("Transfer failed: From Account", a.AccountNo, "is inactive.")
@@ -135,6 +127,46 @@ func (a *Account) TransferBetweenAccounts(toAcc *Account, amount float32) {
 	)
 
 	fmt.Println("Transferred Rs.", amount, " from Account ", a.AccountNo, " to Account ", toAcc.AccountNo)
+}
+
+func TransferBetweenAccounts(fromAccNo, toAccNo int, amount float32) {
+
+	fromAcc := GetAccountByNo(fromAccNo)
+	toAcc := GetAccountByNo(toAccNo)
+
+	if fromAcc == nil || toAcc == nil {
+		fmt.Println("One or both accounts not found.")
+		return
+	}
+
+	if !fromAcc.IsActive || !toAcc.IsActive {
+		fmt.Println("One or both accounts are inactive.")
+		return
+	}
+
+	if amount <= 0 {
+		fmt.Println("Transfer amount must be positive.")
+		return
+	}
+
+	if fromAcc.Balance < amount {
+		fmt.Println("Insufficient balance.")
+		return
+	}
+
+	fromAcc.Balance -= amount
+	fromAcc.AddTransaction("Transfer Out", amount, fmt.Sprintf("To Account %d", toAcc.AccountNo))
+
+	toAcc.Balance += amount
+	toAcc.AddTransaction("Transfer In", amount, fmt.Sprintf("From Account %d", fromAcc.AccountNo))
+
+	ledger.AddTransferEntry(
+		fromAcc.AccountNo, fromAcc.BankName,
+		toAcc.AccountNo, toAcc.BankName,
+		amount,
+	)
+
+	fmt.Println("Transferred Rs.", amount, "from Account", fromAcc.AccountNo, "to Account", toAcc.AccountNo)
 }
 
 func (a *Account) AddTransaction(txType string, amount float32, note string) {
@@ -175,7 +207,6 @@ func GetAccountsPaginated(page, size int) []*Account {
 }
 
 func DeleteAccount(accountNo int) error {
-	defer handleAccountPanic("DeleteAccount")
 	acc := GetAccountByNo(accountNo)
 	if acc == nil {
 		return fmt.Errorf("account not found")

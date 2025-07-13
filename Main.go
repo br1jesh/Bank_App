@@ -30,9 +30,10 @@ func main() {
 	user1.DepositToAccount(acc5.AccountNo, 9900)
 	user1.Withdraw(acc1.AccountNo, 500)
 
-	user1.TransferBetweenAccounts(1001, 1002, 9)
-	user1.TransferBetweenAccounts(acc1.AccountNo, acc2.AccountNo, 100)
-	user2.TransferBetweenAccounts(acc3.AccountNo, acc4.AccountNo, 100)
+	user1.TransferBetweenAccountsSelf(1001, 1002, 9)
+	user1.TransferBetweenAccountsSelf(acc1.AccountNo, acc2.AccountNo, 100)
+	user2.TransferBetweenAccountsSelf(acc3.AccountNo, acc4.AccountNo, 100)
+	user1.TransferBetweenAccounts(1001, acc3.AccountNo, 499)
 
 	acc1.PrintPassbook()
 
@@ -42,14 +43,5 @@ func main() {
 	fmt.Println("\n------------------------")
 	b1.PrintAllPassbooks()
 
-	fmt.Println("\n--- ---------")
-	Customer.DeleteCustomer(admin, user1.CustomerId)
-
-	fmt.Println("\n---------------------")
-	Ledger.PrintBankBalances()
-
-	user1.ViewMyAccounts()
-	user1.DeleteAccount(acc1.AccountNo)
-	user1.ViewMyAccounts()
-	user1.DepositToAccount(acc1.AccountNo, 2000)
+	Ledger.PrintDetailedSummary()
 }
